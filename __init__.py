@@ -190,6 +190,47 @@ def delete_book(book_id):
     conn.close()
     return redirect(url_for("list_books"))
 
+@app.route("/books/search", methods=["GET", "POST"])
+def search_books():
+    """
+    Recherche de livres disponibles (available = 1)
+    par titre ou auteur (contient le texte saisi)
+    """
+    results = []
+    query = ""
+    message = None
+
+    if request.method == "POST":
+        query = request.form.get("query", "").strip()
+
+        if query:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT * FROM books
+                WHERE available = 1
+                  AND (title LIKE ? OR author LIKE ?)
+                ORDER BY title
+                """,
+                (f"%{query}%", f"%{query}%"),
+            )
+            results = cur.fetchall()
+            conn.close()
+
+            if not results:
+                message = "Aucun livre disponible ne correspond à cette recherche."
+        else:
+            message = "Veuillez saisir un texte de recherche."
+
+    return render_template(
+        "search_books.html",
+        query=query,
+        results=results,
+        message=message,
+    )
+
+
 
 
 # -------- Exemple : autres routes déjà présentes (si tu en as) --------
