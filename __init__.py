@@ -165,6 +165,32 @@ def add_book():
 
     return render_template("add_book.html", message=message)
 
+@app.route("/books")
+def list_books():
+    """
+    Liste tous les livres avec possibilité de suppression
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM books ORDER BY id")
+    books = cur.fetchall()
+    conn.close()
+    return render_template("read_data.html", books=books)
+
+
+@app.route("/books/<int:book_id>/delete", methods=["POST"])
+def delete_book(book_id):
+    """
+    Suppression d'un livre
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM books WHERE id = ?", (book_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("list_books"))
+
+
 
 # -------- Exemple : autres routes déjà présentes (si tu en as) --------
 # Ici, tu peux garder tes routes existantes pour ajouter livres, lire données, etc.
