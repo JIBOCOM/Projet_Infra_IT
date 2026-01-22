@@ -139,6 +139,32 @@ def fiche_nom():
 
     return render_template("fiche_nom.html", client=client, message=message)
 
+@app.route("/books/add", methods=["GET", "POST"])
+def add_book():
+    """
+    Enregistrement d'un livre dans la table books
+    """
+    message = None
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        author = request.form.get("author", "").strip()
+
+        if title and author:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO books (title, author, available) VALUES (?, ?, 1)",
+                (title, author),
+            )
+            conn.commit()
+            conn.close()
+            message = "Livre enregistré avec succès."
+        else:
+            message = "Le titre et l'auteur sont obligatoires."
+
+    return render_template("add_book.html", message=message)
+
 
 # -------- Exemple : autres routes déjà présentes (si tu en as) --------
 # Ici, tu peux garder tes routes existantes pour ajouter livres, lire données, etc.
