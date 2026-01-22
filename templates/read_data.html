@@ -1,28 +1,43 @@
-<!DOCTYPE>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Clients</title>
+    <title>Liste des livres</title>
 </head>
 <body>
-    <h1>Liste des Clients</h1>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Création</th>
-            <th>Nom</th>
-            <th>Prénom</th>
-            <th>Adresse</th>
-        </tr>
-        {% for row in data %}
-        <tr>
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ row[4] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <h1>Liste des livres</h1>
+
+    <p>
+        <a href="{{ url_for('hello_world') }}">Accueil</a> |
+        <a href="{{ url_for('add_book') }}">Ajouter un livre</a>
+    </p>
+
+    {% if books %}
+        <table border="1" cellpadding="6">
+            <tr>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Auteur</th>
+                <th>Disponible</th>
+                <th>Actions</th>
+            </tr>
+            {% for b in books %}
+            <tr>
+                <td>{{ b.id }}</td>
+                <td>{{ b.title }}</td>
+                <td>{{ b.author }}</td>
+                <td>{{ 'Oui' if b.available else 'Non' }}</td>
+                <td>
+                    <form action="{{ url_for('delete_book', book_id=b.id) }}"
+                          method="post" style="display:inline;">
+                        <button type="submit">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Aucun livre enregistré.</p>
+    {% endif %}
 </body>
 </html>
