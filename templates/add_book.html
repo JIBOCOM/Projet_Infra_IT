@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un livre</title>
+</head>
+<body>
+    <h1>Ajouter un livre</h1>
+
+    <p><a href="{{ url_for('hello_world') }}">Accueil</a></p>
+
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('add_book') }}" method="post">
+        <p>
+            <label for="title">Titre :</label><br>
+            <input type="text" id="title" name="title" required>
+        </p>
+        <p>
+            <label for="author">Auteur :</label><br>
+            <input type="text" id="author" name="author" required>
+        </p>
+        <p>
+            <button type="submit">Enregistrer</button>
+        </p>
+    </form>
+</body>
+</html>
