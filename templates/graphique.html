@@ -1,43 +1,46 @@
-<!DOCTYPE>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Metrique</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  </head>  
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des emprunts</title>
+</head>
+<body>
+    <h1>Liste des emprunts</h1>
 
-  <body>
-    <div id="chart_div"></div>
-    <script>
-      google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(drawBackgroundColor);
-     function drawBackgroundColor() {
-    function drawChart(data) {
-    // Convertir les données récupérées en un tableau utilisable par Google Charts
-    var dataTable = new google.visualization.DataTable();
-    dataTable.addColumn('string', 'Date');
-    dataTable.addColumn('number', 'Valeur');
-    data.results.forEach(entry => {
-      var date = new Date(entry.Jour * 1000);
-      dataTable.addRow([date.toLocaleDateString(), entry.temp]);
-    });
+    <p><a href="{{ url_for('hello_world') }}">Accueil</a></p>
 
-    // Configurer les options du graphique en ligne
-    var options = {
-      title: 'Évolution des températures de Paris pour les 16 prochains jours',
-      curveType: 'function',
-      legend: { position: 'bottom' }
-    };
-    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-    chart.draw(dataTable, options);
-  }
-  // Récupération de données depuis notre API /paris/
-  fetch('/paris/')
-    .then(response => response.json())
-    .then(data => {
-      drawChart(data);
-    })
-}
-    </script>
-  </body>
+    {% if borrows %}
+        <table border="1" cellpadding="6">
+            <tr>
+                <th>ID emprunt</th>
+                <th>Utilisateur</th>
+                <th>Livre</th>
+                <th>Auteur</th>
+                <th>Date emprunt</th>
+                <th>Date retour</th>
+                <th>Actions</th>
+            </tr>
+            {% for b in borrows %}
+            <tr>
+                <td>{{ b.borrowing_id }}</td>
+                <td>{{ b.username }}</td>
+                <td>{{ b.title }}</td>
+                <td>{{ b.author }}</td>
+                <td>{{ b.borrow_date }}</td>
+                <td>{{ b.return_date or 'En cours' }}</td>
+                <td>
+                    {% if not b.return_date %}
+                    <form action="{{ url_for('return_book', borrowing_id=b.borrowing_id) }}"
+                          method="post" style="display:inline;">
+                        <button type="submit">Retourner</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Aucun emprunt enregistré.</p>
+    {% endif %}
+</body>
 </html>
