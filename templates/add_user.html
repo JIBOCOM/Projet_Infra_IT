@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un utilisateur</title>
+</head>
+<body>
+    <h1>Ajouter un utilisateur</h1>
+
+    <p><a href="{{ url_for('hello_world') }}">Accueil</a></p>
+
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('add_user') }}" method="post">
+        <p>
+            <label for="username">Login :</label><br>
+            <input type="text" id="username" name="username" required>
+        </p>
+        <p>
+            <label for="password">Mot de passe :</label><br>
+            <input type="password" id="password" name="password" required>
+        </p>
+        <p>
+            <label for="role">Rôle :</label><br>
+            <select id="role" name="role">
+                <option value="user">Utilisateur</option>
+                <option value="admin">Administrateur</option>
+            </select>
+        </p>
+        <p>
+            <button type="submit">Enregistrer</button>
+        </p>
+    </form>
+</body>
+</html>
