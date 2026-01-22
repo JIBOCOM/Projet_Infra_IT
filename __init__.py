@@ -5,7 +5,6 @@ from flask import (
     redirect,
     url_for,
     session,
-    jsonify,
 )
 import sqlite3
 import os
@@ -23,7 +22,7 @@ def get_db_connection():
     return conn
 
 
-# -------- Authentification ADMIN (déjà utilisée pour /lecture) --------
+# ----------------- AUTH ADMIN (pour /lecture) -----------------
 
 def est_authentifie():
     return session.get("authentifie")
@@ -37,7 +36,6 @@ def hello_world():
 @app.route("/authentification", methods=["GET", "POST"])
 def authentification():
     error = None
-
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
@@ -73,7 +71,7 @@ def lecture():
     return "Zone lecture réservée à l'administrateur."
 
 
-# -------- Authentification USER pour /fiche_nom/ --------
+# ----------------- AUTH USER (pour /fiche_nom/) -----------------
 
 def est_user_connecte():
     return session.get("user_auth")
@@ -81,11 +79,7 @@ def est_user_connecte():
 
 @app.route("/login_user", methods=["GET", "POST"])
 def login_user():
-    """
-    Authentification pour accéder à /fiche_nom/ (user / 12345)
-    """
     error = None
-
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
@@ -105,14 +99,8 @@ def deconnexion_user():
     return redirect(url_for("hello_world"))
 
 
-# -------- Exercice 1 + 2 : route /fiche_nom/ protégée --------
-
 @app.route("/fiche_nom/", methods=["GET", "POST"])
 def fiche_nom():
-    """
-    Recherche d'un client par nom (username) dans la table users
-    Accès réservé à l'utilisateur simple (user / 12345)
-    """
     if not est_user_connecte():
         return redirect(url_for("login_user"))
 
@@ -121,7 +109,6 @@ def fiche_nom():
 
     if request.method == "POST":
         nom = request.form.get("nom", "").strip()
-
         if nom:
             conn = get_db_connection()
             cur = conn.cursor()
@@ -131,7 +118,6 @@ def fiche_nom():
             )
             client = cur.fetchone()
             conn.close()
-
             if not client:
                 message = "Aucun client trouvé pour ce nom."
         else:
@@ -139,13 +125,38 @@ def fiche_nom():
 
     return render_template("fiche_nom.html", client=client, message=message)
 
+
+# ----------------- GESTION DES UTILISATEURS -----------------
+
+@app.route("/users/add", methods=["GET", "POST"])
+def add_user():
+    message = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        role = request.form.get("role", "user")
+
+        if username and password:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                (username, password, role),
+            )
+            conn.commit()
+            conn.close()
+            message = "Utilisateur enregistré."
+        else:
+            message = "Login et mot de passe obligatoires."
+
+    return render_template("add_user.html", message=message)
+
+
+# ----------------- GESTION DES LIVRES -----------------
+
 @app.route("/books/add", methods=["GET", "POST"])
 def add_book():
-    """
-    Enregistrement d'un livre dans la table books
-    """
     message = None
-
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         author = request.form.get("author", "").strip()
@@ -165,11 +176,9 @@ def add_book():
 
     return render_template("add_book.html", message=message)
 
+
 @app.route("/books")
 def list_books():
-    """
-    Liste tous les livres avec possibilité de suppression
-    """
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM books ORDER BY id")
@@ -180,9 +189,6 @@ def list_books():
 
 @app.route("/books/<int:book_id>/delete", methods=["POST"])
 def delete_book(book_id):
-    """
-    Suppression d'un livre
-    """
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("DELETE FROM books WHERE id = ?", (book_id,))
@@ -190,19 +196,15 @@ def delete_book(book_id):
     conn.close()
     return redirect(url_for("list_books"))
 
+
 @app.route("/books/search", methods=["GET", "POST"])
 def search_books():
-    """
-    Recherche de livres disponibles (available = 1)
-    par titre ou auteur (contient le texte saisi)
-    """
     results = []
     query = ""
     message = None
 
     if request.method == "POST":
         query = request.form.get("query", "").strip()
-
         if query:
             conn = get_db_connection()
             cur = conn.cursor()
@@ -217,7 +219,6 @@ def search_books():
             )
             results = cur.fetchall()
             conn.close()
-
             if not results:
                 message = "Aucun livre disponible ne correspond à cette recherche."
         else:
@@ -231,13 +232,78 @@ def search_books():
     )
 
 
+# ----------------- EMPRUNTS & STOCK -----------------
+
+@app.route("/borrow/<int:book_id>", methods=["POST"])
+def borrow_book(book_id):
+    # ici, on suppose user_id = 2 (user1) pour l'exemple
+    user_id = 2
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM books WHERE id = ? AND available = 1", (book_id,))
+    book = cur.fetchone()
+    if not book:
+        conn.close()
+        return redirect(url_for("list_books"))
+
+    cur.execute(
+        "INSERT INTO borrowings (user_id, book_id) VALUES (?, ?)",
+        (user_id, book_id),
+    )
+    cur.execute("UPDATE books SET available = 0 WHERE id = ?", (book_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("list_books"))
 
 
-# -------- Exemple : autres routes déjà présentes (si tu en as) --------
-# Ici, tu peux garder tes routes existantes pour ajouter livres, lire données, etc.
+@app.route("/borrowings")
+def list_borrowings():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT b.id as borrowing_id,
+               u.username,
+               bo.title,
+               bo.author,
+               b.borrow_date,
+               b.return_date
+        FROM borrowings b
+        JOIN users u ON b.user_id = u.id
+        JOIN books bo ON b.book_id = bo.id
+        ORDER BY b.borrow_date DESC
+        """
+    )
+    borrows = cur.fetchall()
+    conn.close()
+    return render_template("graphique.html", borrows=borrows)
 
 
-# -------- Lancement local --------
+@app.route("/return/<int:borrowing_id>", methods=["POST"])
+def return_book(borrowing_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM borrowings WHERE id = ?", (borrowing_id,))
+    borrowing = cur.fetchone()
+    if not borrowing:
+        conn.close()
+        return redirect(url_for("list_borrowings"))
+
+    cur.execute(
+        "UPDATE borrowings SET return_date = CURRENT_TIMESTAMP WHERE id = ?",
+        (borrowing_id,),
+    )
+    cur.execute(
+        "UPDATE books SET available = 1 WHERE id = ?",
+        (borrowing["book_id"],),
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for("list_borrowings"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
