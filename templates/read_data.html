@@ -9,7 +9,8 @@
 
     <p>
         <a href="{{ url_for('hello_world') }}">Accueil</a> |
-        <a href="{{ url_for('add_book') }}">Ajouter un livre</a>
+        <a href="{{ url_for('add_book') }}">Ajouter un livre</a> |
+        <a href="{{ url_for('search_books') }}">Recherche</a>
     </p>
 
     {% if books %}
@@ -28,6 +29,12 @@
                 <td>{{ b.author }}</td>
                 <td>{{ 'Oui' if b.available else 'Non' }}</td>
                 <td>
+                    {% if b.available %}
+                    <form action="{{ url_for('borrow_book', book_id=b.id) }}"
+                          method="post" style="display:inline;">
+                        <button type="submit">Emprunter</button>
+                    </form>
+                    {% endif %}
                     <form action="{{ url_for('delete_book', book_id=b.id) }}"
                           method="post" style="display:inline;">
                         <button type="submit">Supprimer</button>
