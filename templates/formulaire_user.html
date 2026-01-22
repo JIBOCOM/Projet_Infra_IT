@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion utilisateur</title>
+</head>
+<body>
+    <h1>Connexion utilisateur</h1>
+
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('login_user') }}" method="post">
+        <p>
+            <label for="username">Login :</label><br>
+            <input type="text" id="username" name="username" value="user">
+        </p>
+        <p>
+            <label for="password">Mot de passe :</label><br>
+            <input type="password" id="password" name="password" value="12345">
+        </p>
+        <p>
+            <button type="submit">Se connecter</button>
+        </p>
+    </form>
+
+    <p>
+        <a href="{{ url_for('hello_world') }}">Retour à l'accueil</a>
+    </p>
+</body>
+</html>
