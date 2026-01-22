@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche client par nom</title>
+</head>
+<body>
+    <h1>Recherche d'un client par nom</h1>
+
+    <p>
+        <a href="{{ url_for('hello_world') }}">Accueil</a> |
+        <a href="{{ url_for('deconnexion_user') }}">Déconnexion utilisateur</a>
+    </p>
+
+    <form action="{{ url_for('fiche_nom') }}" method="post">
+        <p>
+            <label for="nom">Nom (username) du client :</label><br>
+            <input type="text" id="nom" name="nom" required>
+        </p>
+        <p>
+            <button type="submit">Rechercher</button>
+        </p>
+    </form>
+
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+
+    {% if client %}
+        <h2>Résultat</h2>
+        <ul>
+            <li>ID : {{ client.id }}</li>
+            <li>Nom d'utilisateur : {{ client.username }}</li>
+            <li>Rôle : {{ client.role }}</li>
+            <li>Date de création : {{ client.created }}</li>
+        </ul>
+    {% endif %}
+</body>
+</html>
